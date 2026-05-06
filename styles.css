@@ -1,0 +1,16 @@
+.main {
+    background-color: #0e1117;
+    color: white;
+}
+
+h1 {
+    color: #4CAF50;
+}
+
+.stButton button {
+    border-radius: 10px;
+}
+
+.stTextInput input {
+    border-radius: 10px;
+}
