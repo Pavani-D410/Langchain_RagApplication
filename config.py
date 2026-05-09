@@ -1,11 +1,9 @@
 APP_NAME = "📄 Advanced AI Assistant"
 
-MODEL_NAME = "phi3"
+MODEL_NAME = "llama-3.3-70b-versatile"
 
-EMBEDDING_MODEL = "nomic-embed-text"
-
-CHUNK_SIZE = 500
+CHUNK_SIZE = 700
 
 CHUNK_OVERLAP = 100
 
-TOP_K_RESULTS = 2
+TOP_K_RESULTS = 4

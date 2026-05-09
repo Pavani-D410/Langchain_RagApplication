@@ -9,24 +9,25 @@ from utils import save_uploaded_file
 
 from config import APP_NAME
 
+# =========================
+# Page Config
+# =========================
+
 st.set_page_config(
-    page_title="Advanced RAG",
+    page_title="Advanced RAG Chatbot",
     layout="wide"
 )
 
-with open("styles.css") as f:
-
-    st.markdown(
-        f"<style>{f.read()}</style>",
-        unsafe_allow_html=True
-    )
+# =========================
+# Sidebar
+# =========================
 
 with st.sidebar:
 
-    st.title("📂 Upload Files")
+    st.title("📂 Upload Documents")
 
     uploaded_files = st.file_uploader(
-        "Upload documents",
+        "Upload files",
         type=[
             "pdf",
             "txt",
@@ -38,13 +39,37 @@ with st.sidebar:
         accept_multiple_files=True
     )
 
+    st.markdown("---")
+
+    st.info(
+        "Upload multiple documents and chat with them."
+    )
+
+# =========================
+# Main Title
+# =========================
+
 st.title(APP_NAME)
 
+st.markdown(
+    "### Multi-Document AI Assistant using Groq + RAG"
+)
+
+# =========================
+# Session State
+# =========================
+
 if "messages" not in st.session_state:
+
     st.session_state.messages = []
 
 if "retriever" not in st.session_state:
+
     st.session_state.retriever = None
+
+# =========================
+# Process Documents
+# =========================
 
 if uploaded_files:
 
@@ -70,14 +95,27 @@ if uploaded_files:
         "Documents processed successfully!"
     )
 
+# =========================
+# Chat History
+# =========================
+
 for msg in st.session_state.messages:
 
     with st.chat_message(msg["role"]):
+
         st.write(msg["content"])
 
+# =========================
+# Chat Input
+# =========================
+
 question = st.chat_input(
-    "Ask questions..."
+    "Ask questions about your documents..."
 )
+
+# =========================
+# Ask Question
+# =========================
 
 if question and st.session_state.retriever:
 
@@ -89,6 +127,7 @@ if question and st.session_state.retriever:
     )
 
     with st.chat_message("user"):
+
         st.write(question)
 
     with st.spinner("Thinking..."):
@@ -117,4 +156,11 @@ if question and st.session_state.retriever:
     )
 
     with st.chat_message("assistant"):
+
         st.write(final_response)
+
+elif question and not st.session_state.retriever:
+
+    st.warning(
+        "Please upload documents first."
+    )
