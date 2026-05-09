@@ -1,6 +1,5 @@
 import os
-
-from dotenv import load_dotenv
+import streamlit as st
 
 from langchain_text_splitters import (
     RecursiveCharacterTextSplitter
@@ -10,7 +9,9 @@ from langchain_community.vectorstores import FAISS
 
 from langchain_groq import ChatGroq
 
-
+from langchain_community.embeddings import (
+    HuggingFaceEmbeddings
+)
 
 from loaders import load_document
 
@@ -22,30 +23,30 @@ from config import (
 )
 
 # =========================
-# Load Environment Variables
+# GROQ API KEY
 # =========================
 
-load_dotenv()
+groq_api_key = st.secrets["GROQ_API_KEY"]
 
 # =========================
 # LLM
 # =========================
 
 llm = ChatGroq(
+    groq_api_key=groq_api_key,
     model_name=MODEL_NAME
 )
 
 # =========================
-# Embeddings
-
-
-from langchain_community.embeddings import HuggingFaceEmbeddings
+# EMBEDDINGS
+# =========================
 
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
+
 # =========================
-# Process Documents
+# PROCESS DOCUMENTS
 # =========================
 
 def process_documents(file_paths):
@@ -54,9 +55,7 @@ def process_documents(file_paths):
 
     for file_path in file_paths:
 
-        documents = load_document(
-            file_path
-        )
+        documents = load_document(file_path)
 
         for doc in documents:
 
@@ -95,7 +94,7 @@ def process_documents(file_paths):
     return retriever
 
 # =========================
-# Ask Questions
+# ASK QUESTIONS
 # =========================
 
 def ask_documents(question, retriever):
@@ -114,10 +113,7 @@ def ask_documents(question, retriever):
     sources = list(
         set(
             [
-                doc.metadata.get(
-                    "source",
-                    "Unknown"
-                )
+                f"{doc.metadata.get('source', 'Unknown')} (Page {doc.metadata.get('page', 'N/A')})"
                 for doc in retrieved_docs
             ]
         )

@@ -4,3 +4,4 @@ vectorstore/
 uploads/
 .env
 *.pyc
+hf_cache/
