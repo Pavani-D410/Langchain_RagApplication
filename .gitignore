@@ -5,3 +5,4 @@ uploads/
 .env
 *.pyc
 hf_cache/
+.streamlit/secrets.toml
