@@ -139,14 +139,24 @@ if question and st.session_state.retriever:
 
     answer = result["answer"]
 
-    sources = result["sources"]
+    source = result["sources"]
 
-    final_response = f"""
+    # =========================
+    # Final Response
+    # =========================
+
+    if source:
+
+        final_response = f"""
 {answer}
 
-📚 Sources:
-{', '.join(sources)}
+📚 Source:
+{source}
 """
+
+    else:
+
+        final_response = answer
 
     st.session_state.messages.append(
         {

@@ -1,5 +1,6 @@
 import os
-import streamlit as st
+
+from dotenv import load_dotenv
 
 from langchain_text_splitters import (
     RecursiveCharacterTextSplitter
@@ -23,17 +24,16 @@ from config import (
 )
 
 # =========================
-# GROQ API KEY
+# LOAD ENV VARIABLES
 # =========================
 
-groq_api_key = st.secrets["GROQ_API_KEY"]
+load_dotenv()
 
 # =========================
 # LLM
 # =========================
 
 llm = ChatGroq(
-    groq_api_key=groq_api_key,
     model_name=MODEL_NAME
 )
 
@@ -42,7 +42,8 @@ llm = ChatGroq(
 # =========================
 
 embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
+    model_name=
+    "sentence-transformers/all-MiniLM-L6-v2"
 )
 
 # =========================
@@ -55,7 +56,9 @@ def process_documents(file_paths):
 
     for file_path in file_paths:
 
-        documents = load_document(file_path)
+        documents = load_document(
+            file_path
+        )
 
         for doc in documents:
 
@@ -103,6 +106,23 @@ def ask_documents(question, retriever):
         question
     )
 
+    # =========================
+    # No Documents Retrieved
+    # =========================
+
+    if not retrieved_docs:
+
+        return {
+            "answer":
+            "The information is not available in the uploaded documents.",
+            "sources":
+            None
+        }
+
+    # =========================
+    # Context
+    # =========================
+
     context = "\n\n".join(
         [
             doc.page_content
@@ -110,24 +130,54 @@ def ask_documents(question, retriever):
         ]
     )
 
-    sources = list(
-        set(
-            [
-                f"{doc.metadata.get('source', 'Unknown')} (Page {doc.metadata.get('page', 'N/A')})"
-                for doc in retrieved_docs
-            ]
-        )
+    # =========================
+    # Best Matching Document
+    # =========================
+
+    best_doc = retrieved_docs[0]
+
+    source_name = best_doc.metadata.get(
+        "source",
+        "Unknown"
     )
+
+    page_number = best_doc.metadata.get(
+        "page",
+        None
+    )
+
+    # =========================
+    # Source Formatting
+    # =========================
+
+    if page_number is not None:
+
+        source_info = (
+            f"{source_name} - "
+            f"Page {int(page_number) + 1}"
+        )
+
+    else:
+
+        source_info = source_name
+
+    # =========================
+    # Prompt
+    # =========================
 
     prompt = f"""
 You are an intelligent AI assistant.
 
-Use ONLY the provided context.
+STRICT RULES:
 
-If information is not available,
-say:
+1. Answer ONLY from the provided context.
 
-'The information is not available in the uploaded documents.'
+2. If answer is NOT found in context,
+reply EXACTLY:
+
+The information is not available in the uploaded documents.
+
+3. Do NOT use outside knowledge.
 
 Context:
 {context}
@@ -138,7 +188,22 @@ Question:
 
     response = llm.invoke(prompt)
 
+    answer = response.content.strip()
+
+    # =========================
+    # Remove Source if No Answer
+    # =========================
+
+    normalized_answer = answer.lower().strip()
+
+    if (
+        "information is not available"
+        in normalized_answer
+    ):
+
+        source_info = None
+
     return {
-        "answer": response.content,
-        "sources": sources
+        "answer": answer,
+        "sources": source_info
     }
